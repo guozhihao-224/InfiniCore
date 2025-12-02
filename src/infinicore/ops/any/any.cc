@@ -82,17 +82,29 @@ void any_(Tensor output, Tensor input, std::optional<int64_t> dim, bool keepdim)
 }
 
 void any_(Tensor output, Tensor input, const std::vector<int64_t> &dims, bool keepdim) {
-    // 对于多个维度，需要特殊处理
-    // 这里简化处理，实际应该调用支持多维度的版本
     if (dims.size() == 1) {
         any_(output, input, dims[0], keepdim);
     } else {
-        // 多个维度：递归 reduce
+        // 多个维度：从大到小排序，从后往前 reduce
+        std::vector<int64_t> sorted_dims = dims;
+        std::sort(sorted_dims.rbegin(), sorted_dims.rend()); // 降序排序
+        
         Tensor temp = input;
-        for (size_t i = 0; i < dims.size(); ++i) {
-            bool last = (i == dims.size() - 1);
-            temp = any(temp, dims[i], last ? keepdim : true);
+        // 先全部用 keepdim=True 进行 reduce
+        for (int64_t d : sorted_dims) {
+            temp = any(temp, d, true);
         }
+        
+        // 如果最终不需要 keepdim，需要重新计算（因为需要移除维度）
+        if (!keepdim && temp->shape() != output->shape()) {
+            // 重新计算，这次正确处理 keepdim
+            temp = input;
+            for (size_t i = 0; i < sorted_dims.size(); ++i) {
+                bool last = (i == sorted_dims.size() - 1);
+                temp = any(temp, sorted_dims[i], last ? keepdim : true);
+            }
+        }
+        
         output->copy_from(temp);
     }
 }
