@@ -47,23 +47,35 @@ def print_discrepancy(
     import sys
 
     is_terminal = sys.stdout.isatty()
+    
+    # Handle bool type specially - no arithmetic operations allowed
+    is_bool = actual.dtype == torch.bool or expected.dtype == torch.bool
+    
+    if is_bool:
+        # For bool tensors, use logical operations
+        actual_isnan = torch.zeros_like(actual, dtype=torch.bool)
+        expected_isnan = torch.zeros_like(expected, dtype=torch.bool)
+        nan_mismatch = torch.zeros_like(actual, dtype=torch.bool)
+        diff_mask = actual != expected  # Use != for bool comparison
+        diff_indices = torch.nonzero(diff_mask, as_tuple=False)
+        # No delta for bool - just show True/False
+    else:
+        actual_isnan = torch.isnan(actual)
+        expected_isnan = torch.isnan(expected)
 
-    actual_isnan = torch.isnan(actual)
-    expected_isnan = torch.isnan(expected)
-
-    # Calculate difference mask
-    nan_mismatch = (
-        actual_isnan ^ expected_isnan if equal_nan else actual_isnan | expected_isnan
-    )
-    diff_mask = nan_mismatch | (
-        torch.abs(actual - expected) > (atol + rtol * torch.abs(expected))
-    )
-    diff_indices = torch.nonzero(diff_mask, as_tuple=False)
-    delta = actual - expected
+        # Calculate difference mask
+        nan_mismatch = (
+            actual_isnan ^ expected_isnan if equal_nan else actual_isnan | expected_isnan
+        )
+        diff_mask = nan_mismatch | (
+            torch.abs(actual - expected) > (atol + rtol * torch.abs(expected))
+        )
+        diff_indices = torch.nonzero(diff_mask, as_tuple=False)
+        delta = actual - expected
 
     # Display formatting
     col_width = [18, 20, 20, 20]
-    decimal_places = [0, 12, 12, 12]
+    decimal_places = [0, 12, 12, 12] if not is_bool else [0, 6, 6, 6]
     total_width = sum(col_width) + sum(decimal_places)
 
     def add_color(text, color_code):
@@ -75,11 +87,16 @@ def print_discrepancy(
     if verbose:
         for idx in diff_indices:
             index_tuple = tuple(idx.tolist())
-            actual_str = f"{actual[index_tuple]:<{col_width[1]}.{decimal_places[1]}f}"
-            expected_str = (
-                f"{expected[index_tuple]:<{col_width[2]}.{decimal_places[2]}f}"
-            )
-            delta_str = f"{delta[index_tuple]:<{col_width[3]}.{decimal_places[3]}f}"
+            if is_bool:
+                actual_str = f"{str(actual[index_tuple]):<{col_width[1]}}"
+                expected_str = f"{str(expected[index_tuple]):<{col_width[2]}}"
+                delta_str = f"{'diff':<{col_width[3]}}"
+            else:
+                actual_str = f"{actual[index_tuple]:<{col_width[1]}.{decimal_places[1]}f}"
+                expected_str = (
+                    f"{expected[index_tuple]:<{col_width[2]}.{decimal_places[2]}f}"
+                )
+                delta_str = f"{delta[index_tuple]:<{col_width[3]}.{decimal_places[3]}f}"
             print(
                 f" > Index: {str(index_tuple):<{col_width[0]}}"
                 f"actual: {add_color(actual_str, 31)}"
@@ -94,15 +111,16 @@ def print_discrepancy(
         print(
             f"  - Mismatched elements: {len(diff_indices)} / {actual.numel()} ({len(diff_indices) / actual.numel() * 100}%)"
         )
-        print(
-            f"  - Min(actual) : {torch.min(actual):<{col_width[1]}} | Max(actual) : {torch.max(actual):<{col_width[2]}}"
-        )
-        print(
-            f"  - Min(desired): {torch.min(expected):<{col_width[1]}} | Max(desired): {torch.max(expected):<{col_width[2]}}"
-        )
-        print(
-            f"  - Min(delta)  : {torch.min(delta):<{col_width[1]}} | Max(delta)  : {torch.max(delta):<{col_width[2]}}"
-        )
+        if not is_bool:
+            print(
+                f"  - Min(actual) : {torch.min(actual):<{col_width[1]}} | Max(actual) : {torch.max(actual):<{col_width[2]}}"
+            )
+            print(
+                f"  - Min(desired): {torch.min(expected):<{col_width[1]}} | Max(desired): {torch.max(expected):<{col_width[2]}}"
+            )
+            print(
+                f"  - Min(delta)  : {torch.min(delta):<{col_width[1]}} | Max(delta)  : {torch.max(delta):<{col_width[2]}}"
+            )
         print("-" * total_width)
 
     return diff_indices
