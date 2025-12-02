@@ -42,6 +42,7 @@ from infinicore.dtype import (
 from infinicore.ops.add import add
 from infinicore.ops.attention import attention
 from infinicore.ops.exp2 import exp2
+from infinicore.ops.any import any
 from infinicore.ops.matmul import matmul
 from infinicore.ops.mul import mul
 from infinicore.ops.narrow import narrow
@@ -117,6 +118,7 @@ __all__ = [
     "strided_from_blob",
     "zeros",
     "exp2",
+    "any",
 ]
 
 use_ntops = False
