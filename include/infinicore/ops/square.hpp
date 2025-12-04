@@ -12,4 +12,5 @@ public:
 };
 
 Tensor square(Tensor input);
+void square_(Tensor output, Tensor input);
 } // namespace infinicore::op
