@@ -43,6 +43,7 @@ from infinicore.ops.add import add
 from infinicore.ops.attention import attention
 from infinicore.ops.exp2 import exp2
 from infinicore.ops.any import any
+from infinicore.ops.square import square
 from infinicore.ops.matmul import matmul
 from infinicore.ops.mul import mul
 from infinicore.ops.narrow import narrow
@@ -119,6 +120,7 @@ __all__ = [
     "zeros",
     "exp2",
     "any",
+    "square",
 ]
 
 use_ntops = False

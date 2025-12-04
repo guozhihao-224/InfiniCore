@@ -3,9 +3,11 @@
 #include <pybind11/pybind11.h>
 
 #include "ops/add.hpp"
+#include "ops/any.hpp"
 #include "ops/attention.hpp"
 #include "ops/causal_softmax.hpp"
 #include "ops/embedding.hpp"
+#include "ops/exp2.hpp"
 #include "ops/linear.hpp"
 #include "ops/matmul.hpp"
 #include "ops/mul.hpp"
@@ -14,9 +16,8 @@
 #include "ops/rms_norm.hpp"
 #include "ops/rope.hpp"
 #include "ops/silu.hpp"
+#include "ops/square.hpp"
 #include "ops/swiglu.hpp"
-#include "ops/exp2.hpp"
-#include "ops/any.hpp"
 
 namespace py = pybind11;
 
@@ -38,6 +39,7 @@ inline void bind(py::module &m) {
     bind_embedding(m);
     bind_exp2(m);
     bind_any(m);
+    bind_square(m);
 }
 
 } // namespace infinicore::ops
