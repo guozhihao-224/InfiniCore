@@ -40,6 +40,7 @@ from infinicore.dtype import (
     uint8,
 )
 from infinicore.ops.add import add
+from infinicore.ops.aminmax import aminmax
 from infinicore.ops.attention import attention
 from infinicore.ops.exp2 import exp2
 from infinicore.ops.any import any
@@ -103,6 +104,7 @@ __all__ = [
     "uint8",
     # Operations.
     "add",
+    "aminmax",
     "attention",
     "matmul",
     "mul",
